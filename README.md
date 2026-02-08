@@ -1,5 +1,3 @@
-# Sentimental-Analysis
-NLP PROJECT
 # Sentiment Analysis Application
 
 Sentiment analysis app built using Caffeine to analyze user reviews.
