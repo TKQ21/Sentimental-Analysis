@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, MessageSquareText, TrendingUp, AlertTriangle, Activity, Download, Database } from "lucide-react";
+import { BarChart3, MessageSquareText, TrendingUp, AlertTriangle, Activity, Download, Database, Upload } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { SentimentDistribution } from "@/components/SentimentDistribution";
 import { SentimentTrend } from "@/components/SentimentTrend";
@@ -8,21 +8,18 @@ import { KeywordCloud } from "@/components/KeywordCloud";
 import { ModelMetrics } from "@/components/ModelMetrics";
 import { LivePredictor } from "@/components/LivePredictor";
 import { FileUpload } from "@/components/FileUpload";
-import { getDemoData, bulkPredict, type DashboardData } from "@/lib/api";
+import { getDemoData, analyzeCSVLocally, type DashboardData } from "@/lib/api";
 
 const Index = () => {
   const [data, setData] = useState<DashboardData>(getDemoData());
   const [activeTab, setActiveTab] = useState<"overview" | "predict" | "model">("overview");
+  const [hasData, setHasData] = useState(false);
 
   const handleUpload = async (file: File) => {
-    try {
-      await bulkPredict(file);
-      // In production, re-fetch dashboard data here
-    } catch {
-      // Using demo data as fallback
-    }
-    // Simulate refresh with demo data
-    setData(getDemoData());
+    const result = await analyzeCSVLocally(file);
+    setData(result);
+    setHasData(true);
+    setActiveTab("overview");
   };
 
   const tabs = [
@@ -46,10 +43,12 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-surface-2 px-3 py-1.5 rounded-full">
-              <Database className="h-3 w-3" />
-              {data.total_reviews.toLocaleString()} reviews
-            </span>
+            {hasData && (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-surface-2 px-3 py-1.5 rounded-full">
+                <Database className="h-3 w-3" />
+                {data.total_reviews.toLocaleString()} reviews analyzed
+              </span>
+            )}
             <button className="flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors">
               <Download className="h-3 w-3" />
               Export
@@ -80,7 +79,10 @@ const Index = () => {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {activeTab === "overview" && (
+        {/* File Upload — always visible at top */}
+        <FileUpload onUpload={handleUpload} />
+
+        {activeTab === "overview" && hasData && (
           <>
             {/* Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -88,8 +90,6 @@ const Index = () => {
                 title="Total Reviews"
                 value={data.total_reviews.toLocaleString()}
                 icon={BarChart3}
-                trend="up"
-                trendValue="12%"
               />
               <StatCard
                 title="Positive Sentiment"
@@ -97,8 +97,6 @@ const Index = () => {
                 subtitle={`${data.sentiment_distribution[0]?.count.toLocaleString()} reviews`}
                 icon={TrendingUp}
                 variant="positive"
-                trend="up"
-                trendValue="3.2%"
               />
               <StatCard
                 title="Negative Sentiment"
@@ -106,13 +104,11 @@ const Index = () => {
                 subtitle={`${data.sentiment_distribution[2]?.count.toLocaleString()} reviews`}
                 icon={AlertTriangle}
                 variant="negative"
-                trend="down"
-                trendValue="1.5%"
               />
               <StatCard
-                title="Model Accuracy"
+                title="Rating vs Sentiment Match"
                 value={`${(data.model_metrics.accuracy * 100).toFixed(1)}%`}
-                subtitle="BERT + Logistic Regression"
+                subtitle="Keyword-based analysis"
                 icon={Activity}
               />
             </div>
@@ -128,23 +124,42 @@ const Index = () => {
             </div>
 
             {/* Product Breakdown */}
-            <ProductBreakdown data={data.product_breakdown} />
+            {data.product_breakdown.length > 0 && (
+              <ProductBreakdown data={data.product_breakdown} />
+            )}
 
             {/* Keywords */}
-            <KeywordCloud positive={data.top_positive_keywords} negative={data.top_negative_keywords} />
+            {(data.top_positive_keywords.length > 0 || data.top_negative_keywords.length > 0) && (
+              <KeywordCloud positive={data.top_positive_keywords} negative={data.top_negative_keywords} />
+            )}
           </>
         )}
 
-        {activeTab === "predict" && (
-          <div className="space-y-6 max-w-3xl">
-            <LivePredictor />
-            <FileUpload onUpload={handleUpload} />
+        {activeTab === "overview" && !hasData && (
+          <div className="text-center py-20 animate-fade-in">
+            <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <h2 className="font-display text-xl font-semibold text-muted-foreground">Upload a CSV to get started</h2>
+            <p className="text-sm text-muted-foreground/70 mt-2">Your reviews will be analyzed and displayed here</p>
           </div>
         )}
 
-        {activeTab === "model" && (
+        {activeTab === "predict" && (
+          <div className="max-w-3xl">
+            <LivePredictor />
+          </div>
+        )}
+
+        {activeTab === "model" && hasData && (
           <div className="max-w-3xl">
             <ModelMetrics metrics={data.model_metrics} />
+          </div>
+        )}
+
+        {activeTab === "model" && !hasData && (
+          <div className="text-center py-20 animate-fade-in">
+            <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <h2 className="font-display text-xl font-semibold text-muted-foreground">No data yet</h2>
+            <p className="text-sm text-muted-foreground/70 mt-2">Upload a CSV file first to see evaluation metrics</p>
           </div>
         )}
       </main>
@@ -152,7 +167,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-border mt-12 py-6">
         <p className="text-center text-xs text-muted-foreground">
-          SentimentIQ — Connect your FastAPI backend via <code className="text-primary">VITE_API_BASE_URL</code> for live ML inference
+          SentimentIQ — Upload a CSV or set <code className="text-primary">VITE_API_BASE_URL</code> for backend ML inference
         </p>
       </footer>
     </div>
