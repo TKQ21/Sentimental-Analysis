@@ -20,6 +20,16 @@ export interface SentimentResult {
   confidence: number;
 }
 
+export interface AnalyzedReview {
+  review_id: string;
+  product: string;
+  reviewText: string;
+  rating: number;
+  date: string;
+  sentiment: "Positive" | "Neutral" | "Negative";
+  confidence: number;
+}
+
 export interface DashboardData {
   total_reviews: number;
   sentiment_distribution: { label: string; count: number; percentage: number }[];
@@ -27,6 +37,9 @@ export interface DashboardData {
   trend_data: { date: string; positive: number; neutral: number; negative: number }[];
   top_negative_keywords: { word: string; count: number }[];
   top_positive_keywords: { word: string; count: number }[];
+  reviews: AnalyzedReview[];
+  avg_confidence: number;
+  rating_sentiment_correlation: { rating: number; positive: number; neutral: number; negative: number }[];
   model_metrics: {
     accuracy: number;
     precision: number;
@@ -239,6 +252,31 @@ export async function analyzeCSVLocally(file: File): Promise<DashboardData> {
   });
   const accuracy = total > 0 ? correctPredictions / total : 0;
 
+  // Rating vs Sentiment correlation
+  const ratingMap: Record<number, { positive: number; neutral: number; negative: number }> = {};
+  analyzed.forEach(r => {
+    const ratingBucket = Math.round(r.rating) || 3;
+    if (!ratingMap[ratingBucket]) ratingMap[ratingBucket] = { positive: 0, neutral: 0, negative: 0 };
+    if (r.sentiment === "Positive") ratingMap[ratingBucket].positive++;
+    else if (r.sentiment === "Neutral") ratingMap[ratingBucket].neutral++;
+    else ratingMap[ratingBucket].negative++;
+  });
+  const rating_sentiment_correlation = Object.entries(ratingMap)
+    .map(([rating, counts]) => ({ rating: Number(rating), ...counts }))
+    .sort((a, b) => a.rating - b.rating);
+
+  const avg_confidence = analyzed.reduce((s, r) => s + r.confidence, 0) / total;
+
+  const reviews: AnalyzedReview[] = analyzed.map((r, i) => ({
+    review_id: (r as any).review_id || String(i + 1),
+    product: r.product,
+    reviewText: r.reviewText,
+    rating: r.rating,
+    date: r.date,
+    sentiment: r.sentiment,
+    confidence: r.confidence,
+  }));
+
   return {
     total_reviews: total,
     sentiment_distribution: [
@@ -250,6 +288,9 @@ export async function analyzeCSVLocally(file: File): Promise<DashboardData> {
     trend_data,
     top_positive_keywords: extractKeywords(posTexts, POSITIVE_WORDS),
     top_negative_keywords: extractKeywords(negTexts, NEGATIVE_WORDS),
+    reviews,
+    avg_confidence,
+    rating_sentiment_correlation,
     model_metrics: {
       accuracy: Math.max(accuracy, 0.5),
       precision: Math.max(accuracy - 0.02, 0.48),
@@ -277,6 +318,9 @@ export function getDemoData(): DashboardData {
     trend_data: [],
     top_negative_keywords: [],
     top_positive_keywords: [],
+    reviews: [],
+    avg_confidence: 0,
+    rating_sentiment_correlation: [],
     model_metrics: {
       accuracy: 0,
       precision: 0,

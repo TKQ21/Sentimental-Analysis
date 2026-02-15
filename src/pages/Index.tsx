@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, MessageSquareText, TrendingUp, AlertTriangle, Activity, Download, Database, Upload } from "lucide-react";
+import { BarChart3, MessageSquareText, TrendingUp, AlertTriangle, Activity, Download, Database, Upload, Percent } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { SentimentDistribution } from "@/components/SentimentDistribution";
 import { SentimentTrend } from "@/components/SentimentTrend";
@@ -8,6 +8,11 @@ import { KeywordCloud } from "@/components/KeywordCloud";
 import { ModelMetrics } from "@/components/ModelMetrics";
 import { LivePredictor } from "@/components/LivePredictor";
 import { FileUpload } from "@/components/FileUpload";
+import { SentimentGauge } from "@/components/SentimentGauge";
+import { ReviewsTable } from "@/components/ReviewsTable";
+import { RatingVsSentiment } from "@/components/RatingVsSentiment";
+import { ConfidenceDistribution } from "@/components/ConfidenceDistribution";
+import { SentimentSummaryCards } from "@/components/SentimentSummaryCards";
 import { getDemoData, analyzeCSVLocally, type DashboardData } from "@/lib/api";
 
 const Index = () => {
@@ -106,21 +111,42 @@ const Index = () => {
                 variant="negative"
               />
               <StatCard
-                title="Rating vs Sentiment Match"
-                value={`${(data.model_metrics.accuracy * 100).toFixed(1)}%`}
+                title="Avg Confidence"
+                value={`${(data.avg_confidence * 100).toFixed(1)}%`}
                 subtitle="Keyword-based analysis"
-                icon={Activity}
+                icon={Percent}
               />
             </div>
 
-            {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            {/* Sentiment Summary Cards — Positive / Neutral / Negative deep dive */}
+            <SentimentSummaryCards reviews={data.reviews} />
+
+            {/* Charts Row 1: Gauge + Distribution + Trend */}
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+              <div className="lg:col-span-2">
+                <SentimentGauge
+                  positive={data.sentiment_distribution[0]?.count ?? 0}
+                  neutral={data.sentiment_distribution[1]?.count ?? 0}
+                  negative={data.sentiment_distribution[2]?.count ?? 0}
+                  total={data.total_reviews}
+                />
+              </div>
               <div className="lg:col-span-2">
                 <SentimentDistribution data={data.sentiment_distribution} />
               </div>
               <div className="lg:col-span-3">
                 <SentimentTrend data={data.trend_data} />
               </div>
+            </div>
+
+            {/* Charts Row 2: Rating vs Sentiment + Confidence */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {data.rating_sentiment_correlation.length > 0 && (
+                <RatingVsSentiment data={data.rating_sentiment_correlation} />
+              )}
+              {data.reviews.length > 0 && (
+                <ConfidenceDistribution reviews={data.reviews} />
+              )}
             </div>
 
             {/* Product Breakdown */}
@@ -131,6 +157,11 @@ const Index = () => {
             {/* Keywords */}
             {(data.top_positive_keywords.length > 0 || data.top_negative_keywords.length > 0) && (
               <KeywordCloud positive={data.top_positive_keywords} negative={data.top_negative_keywords} />
+            )}
+
+            {/* Individual Reviews Table */}
+            {data.reviews.length > 0 && (
+              <ReviewsTable reviews={data.reviews} />
             )}
           </>
         )}
