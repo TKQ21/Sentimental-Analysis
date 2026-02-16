@@ -1,72 +1,103 @@
-# Welcome to your Lovable project
 
-## Project info
+SentimentIQ – E-Commerce Review Intelligence System
+
+A production-style Sentiment Analysis system that analyzes large-scale e-commerce product reviews and generates actionable business insights using NLP and machine learning.
+
+📊 Project Overview
+
+SentimentIQ is designed to simulate a real-world analytics system used by companies like e-commerce platforms to:
+
+Analyze customer reviews at scale
+
+Detect negative sentiment trends
+
+Identify product risk levels
+
+Generate automated business recommendations
+
+Provide downloadable analytics reports
+
+The system processes thousands of reviews and provides both real-time predictions and bulk dataset analysis.
 
 **URL**:  (https://sparkle-sentiment.lovable.app)
-## How can I edit this code?
 
-There are several ways of editing your application.
+🔥 Key Features
+✅ Real-Time Sentiment Prediction
 
-**Use Lovable**
+Classifies text into Positive / Neutral / Negative
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Displays probability distribution
 
-Changes made via Lovable will be committed automatically to this repo.
+Highlights influential keywords
 
-**Use your preferred IDE**
+Confidence score shown
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+📈 Business Intelligence Layer
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Product Risk Score (Low / Medium / High)
 
-Follow these steps:
+Negative sentiment percentage calculation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Automated recommendations
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Keyword frequency detection
 
-# Step 3: Install the necessary dependencies.
-npm i
+📊 Trend Monitoring
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Daily sentiment trend graph
 
-**Edit a file directly in GitHub**
+Spike detection for negative surge
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Time-based analysis (7 / 30 / 90 days)
 
-**Use GitHub Codespaces**
+🧪 Model Evaluation Dashboard
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Accuracy
 
-## What technologies are used for this project?
+Precision
 
-This project is built with:
+Recall
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+F1 Score
 
-## How can I deploy this project?
+Confusion Matrix
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+📄 Report Generation
 
-## Can I connect a custom domain to my Lovable project?
+Downloadable PDF report
 
-Yes, you can!
+Sentiment distribution summary
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Product breakdown
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Risk classification
+
+Timestamped generation
+
+🧠 Tech Stack
+
+Python
+
+NLP (VADER + ML-based classification)
+
+Streamlit / Web UI
+
+Pandas & NumPy
+
+Plotly (interactive charts)
+
+jsPDF (report generation)
+
+📂 Dataset
+
+Simulated real-world e-commerce review dataset with:
+
+5,000+ reviews
+
+Multiple products
+
+Ratings
+
+Timestamped review dates
+
+Mixed sentiment distribution
